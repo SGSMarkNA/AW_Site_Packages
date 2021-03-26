@@ -1,0 +1,74 @@
+import logging
+import os
+os.sys.path.append("\\\\Blue\\app_config\\python\\AW_site_packages")
+os.sys.path.append("\\Blue\app_config\python\AW_site_packages")
+# ---------------------------------------------------------------------------------------------
+# Variables
+# ---------------------------------------------------------------------------------------------
+# location to write logfile for this script
+# logging is a bit of overkill for this class, but can still be useful.
+logfile = os.path.join(os.environ["temp"],"rv_short_cut_builder.log")
+
+# ----------------------------------------------
+# Set up logging
+# ----------------------------------------------
+try:
+	logger  = logging.getLogger(name="RV_Shortcut_Builder")
+	logging.basicConfig(level=logging.DEBUG,
+                       format='%(asctime)s %(levelname)-8s %(message)s',
+                       datefmt='%Y-%b-%d %H:%M:%S',
+                       filename=logfile,
+                       filemode='w+')
+	logger  = logging.getLogger(name="RV_Shortcut_Builder")
+	logger.info("RV Shortcut Builder logging started.")
+except:
+	logger = None
+	
+if logger is not None:
+	logger.debug("importing os and winshell")
+	
+try:
+	import winshell
+except ImportError,e:
+	if logger is not None:
+		logger.error("Unable to import winshell: %r" % e)
+	winshell = None
+	
+if logger is not None:
+	logger.debug("from win32com.client importing Dispatch")
+try:
+	from win32com.client import Dispatch
+except ImportError,e:
+	if logger is not None:
+		logger.error("Unable to import Dispatch: %r" % e)
+	Dispatch = None
+
+def createShortcut(path, target='', wDir='', icon=''):    
+	ext = path[-3:]
+	if ext == 'url':
+		shortcut = file(path, 'w')
+		shortcut.write('[InternetShortcut]\n')
+		shortcut.write('URL=%s' % target)
+		shortcut.close()
+	else:
+		shell = Dispatch('WScript.Shell')
+		shortcut = shell.CreateShortCut(path)
+		shortcut.Targetpath = target
+		shortcut.WorkingDirectory = wDir
+		if icon == '':
+			pass
+		else:
+			shortcut.IconLocation = icon
+		shortcut.save()
+		
+if __name__ == "__main__":
+	if winshell != None and Dispatch != None:
+		if logger is not None:
+			logger.debug("geting desktop path from winshell.desktop()")
+		path    = os.path.join(winshell.desktop(), "RV.lnk")
+		target  = r"\\Blue\app_config\rv\6.2.7\bin\rv.exe"
+		wDir    = os.path.dirname(target)
+		icon    = target
+		if logger is not None:
+			logger.debug("createing shortcut")
+		createShortcut(path, target, wDir, icon)

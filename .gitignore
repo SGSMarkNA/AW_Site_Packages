@@ -1,0 +1,4 @@
+*.DS_Store
+*.pyc
+/_Shotgun_ActionMenu_Items/
+/__pycache__/
